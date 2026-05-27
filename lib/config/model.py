@@ -8,7 +8,13 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.utilities.cloud_io import load as pl_load
+
+try:
+    from pytorch_lightning.utilities.cloud_io import load as pl_load
+except ModuleNotFoundError:
+    # PyTorch Lightning >= 2.0 已移除 cloud_io；本地 .ckpt 用 torch.load 即可
+    def pl_load(path: str, map_location=None):
+        return torch.load(path, map_location=map_location)
 
 
 def load_model_from_checkpoint(  # noqa: C901

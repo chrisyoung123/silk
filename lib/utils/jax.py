@@ -14,8 +14,8 @@ from inspect import signature
 import jax
 import jax.numpy as jnp
 import torch
-from jax import dlpack as jax_dlpack, tree_flatten, tree_unflatten
-from jax.tree_util import tree_map
+from jax import dlpack as jax_dlpack
+from jax.tree_util import tree_flatten, tree_map, tree_unflatten
 from torch.utils import dlpack as torch_dlpack
 
 # To avoid having jax taking all the VRAM

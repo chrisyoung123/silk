@@ -42,6 +42,7 @@ from typing import Any
 
 import hydra
 import hydra.utils
+
 import silk.logger as logger
 from omegaconf import DictConfig
 from silk.config import PACKAGE_NAME
@@ -56,6 +57,9 @@ COMMANDS = {
     "cache_dataset",
     "visualization",
     "hpatches_tests",
+    "megadepth_pose_tests",
+    "covis_absolute_pose",
+    "feature_cache",
     "viewreid_tests",
     "image_pair_visualization",
 }
