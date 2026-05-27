@@ -10,9 +10,11 @@ from copy import deepcopy
 import numpy as np
 import skimage.io as io
 import torch
+
 import torchvision
 from silk.backbones.silk.silk import SiLKVGG as SiLK
 from silk.backbones.superpoint.vgg import ParametricVGG
+
 from silk.config.model import load_model_from_checkpoint
 from silk.models.silk import matcher
 
@@ -20,12 +22,15 @@ from silk.models.silk import matcher
 CHECKPOINT_PATH = os.path.join(
     os.path.dirname(__file__), "../../assets/models/silk/coco-rgb-aug.ckpt"
 )
-DEVICE = "cuda:0"
+DEVICE = os.environ.get(
+    "SILK_DEVICE",
+    "cuda:0" if torch.cuda.is_available() else "cpu",
+)
 
-SILK_NMS = 0  # NMS radius, 0 = disabled
-SILK_BORDER = 0  # remove detection on border, 0 = disabled
+SILK_NMS = 9  # NMS radius, 0 = disabled
+SILK_BORDER = 20  # remove detection on border, 0 = disabled
 SILK_THRESHOLD = 1.0  # keypoint score thresholding, if # of keypoints is less than provided top-k, then will add keypoints to reach top-k value, 1.0 = disabled
-SILK_TOP_K = 10000  # minimum number of best keypoints to output, could be higher if threshold specified above has low value
+SILK_TOP_K = 20000  # minimum number of best keypoints to output, could be higher if threshold specified above has low value
 SILK_DEFAULT_OUTPUT = (  # outputs required when running the model
     "dense_positions",
     "normalized_descriptors",
@@ -37,8 +42,8 @@ SILK_BACKBONE = ParametricVGG(
     padding=0,
     normalization_fn=[torch.nn.BatchNorm2d(i) for i in (64, 64, 128, 128)],
 )
-SILK_MATCHER = matcher(postprocessing="ratio-test", threshold=0.6)
-# SILK_MATCHER = matcher(postprocessing="double-softmax", threshold=0.6, temperature=0.1)
+# SILK_MATCHER = matcher(postprocessing="ratio-test", threshold=0.6)
+SILK_MATCHER = matcher(postprocessing="double-softmax", threshold=0.6, temperature=0.1)
 # SILK_MATCHER = matcher(postprocessing="none")
 
 
@@ -56,17 +61,24 @@ def load_images(*paths, as_gray=True):
 def get_model(
     checkpoint=CHECKPOINT_PATH,
     nms=SILK_NMS,
+    border=SILK_BORDER,
+    top_k=SILK_TOP_K,
+    threshold=SILK_THRESHOLD,
     device=DEVICE,
     default_outputs=SILK_DEFAULT_OUTPUT,
 ):
     # load model
+    print(
+        f"Loading model from {checkpoint} with NMS={nms}, "
+        f"BORDER={border}, THRESHOLD={threshold}, TOP_K={top_k}"
+    )
     model = SiLK(
         in_channels=1,
         backbone=deepcopy(SILK_BACKBONE),
-        detection_threshold=SILK_THRESHOLD,
-        detection_top_k=SILK_TOP_K,
+        detection_threshold=threshold,
+        detection_top_k=top_k,
         nms_dist=nms,
-        border_dist=SILK_BORDER,
+        border_dist=border,
         default_outputs=default_outputs,
         descriptor_scale_factor=SILK_SCALE_FACTOR,
         padding=0,

@@ -27,3 +27,31 @@ To run the evaluation pipeline (using VGG-4), use the following commands
 cd external/URR
 python evaluate.py --checkpoint "<silk_path>/assets/models/silk/analysis/alpha/pvgg-4.ckpt" --boost_alignment --img_dim 146 --encoder silk PCReg
 ```
+
+## MegaDepth (Relative Pose)
+
+The repository now provides a built-in MegaDepth relative pose evaluation mode:
+
+```bash
+./bin/silk-cli mode=run-megadepth-pose-tests-silk
+```
+
+The mode expects a LoFTR-style MegaDepth index `.npz` (for example from `megadepth_test_1500`) with fields:
+
+* `image_paths`
+* `intrinsics`
+* `poses`
+* `pair_infos`
+
+By default it:
+
+* runs SiLK feature extraction on each pair,
+* matches descriptors with the configured matcher,
+* estimates relative pose with `findEssentialMat + recoverPose`,
+* reports pose AUC (`auc@5`, `auc@10`, `auc@20`) and additional diagnostics.
+
+Please edit `etc/mode/run-megadepth-pose-tests-silk.yaml` to set:
+
+* `mode.dataset.dataset_root`
+* `mode.dataset.index_path`
+* `mode.dataset.pose_convention` (`w2c` or `c2w`)
